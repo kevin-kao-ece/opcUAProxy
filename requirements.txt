@@ -1,0 +1,7 @@
+cryptography
+opcua
+pymodbus<3 
+fastapi 
+uvicorn[standard]
+pyyaml
+python-multipart
