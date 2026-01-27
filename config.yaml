@@ -1,0 +1,51 @@
+opcua:
+  endpoint: "opc.tcp://0.0.0.0:4840/"
+  namespace: "urn:opcua:modbus:proxy"
+  users:
+    admin: admin123
+
+modbus:
+  slaves:
+    inverter1:
+      ip: "20.198.254.232"
+      port: 502
+      unit_id: 1
+
+poll_interval: 10.0
+
+nodes:
+  - name: "L1_Voltage"
+    node_id: "ns=2;s=L1_Voltage"
+    access: "read"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 1440
+      datatype: "float"
+  
+  - name: "L2_Voltage"
+    node_id: "ns=2;s=L2_Voltage"
+    access: "read"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 1450
+      datatype: "float"
+
+  - name: "Total_Energy"
+    node_id: "ns=2;s=Total_Energy"
+    access: "read"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 1442
+      datatype: "uint32"
+
+  - name: "Run_Command"
+    node_id: "ns=2;s=Run_Command"
+    access: "write"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 6452
+      datatype: "float"
