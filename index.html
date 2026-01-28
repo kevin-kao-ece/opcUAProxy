@@ -152,11 +152,16 @@
                 // Update text only if changed
                 if (valEl.innerText !== String(tag.value)) {
                     valEl.innerText = tag.value;
-                    // Temporary highlight color on change
-                    valEl.classList.add('text-white');
-                    setTimeout(() => valEl.classList.remove('text-white'), 500);
-                }
 
+                    // Style based on status
+                    if (tag.status === 'offline') {
+                        valEl.classList.add('text-red-500');
+                        valEl.classList.remove('text-blue-300');
+                    } else {
+                        valEl.classList.add('text-blue-300');
+                        valEl.classList.remove('text-red-500');
+                    }
+                }
                 if (timeEl.innerText !== tag.time) timeEl.innerText = tag.time;
 
                 // Update badge color
