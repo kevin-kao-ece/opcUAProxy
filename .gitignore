@@ -136,4 +136,7 @@ server/
 database/
 
 #Certificates
-Setting/Certs
+Setting/CertsgenCertificate.sh
+server_cert.pem
+server_key.pem
+genCertificate.sh
