@@ -1,0 +1,108 @@
+opcua:
+  endpoint: "opc.tcp://0.0.0.0:4840/"
+  namespace: "urn:opcua:modbus:proxy"    
+
+modbus:
+  poll_interval: 10.0
+  slaves:
+    # --- TCP Example (Ethernet Inverter) ---
+    inverter1:
+      ip: "20.198.254.232"
+      port: 502
+      slave_id: 1       # Renamed from unit_id
+      byte_swap: true
+      word_swap: false
+    
+    # --- RTU Example (RS485 Power Meter) ---
+    Texol_RTU:
+      port: "/dev/ttyS1"   # or "COM3" on Windows
+      baudrate: 115200
+      parity: "E"          # Use "E" for Even, "O" for Odd, "N" for None
+      stopbits: 1
+      databits: 8
+      slave_id: 1
+      byte_swap: false
+      word_swap: false
+
+nodes:
+  - name: "Serial_Number"
+    node_id: "ns=2;s=SN"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 1000
+      datatype: "string"
+      length: 8             # Required for strings
+
+  - name: "L1_Voltage"
+    node_id: "ns=2;s=L1_Voltage"
+    access: "read"          # support read, write
+    modbus:
+      slave: "inverter1"
+      function: "holding"   # support input, holding, coil
+      address: 1440
+      datatype: "float"     # support int16, uint16, int32, uint32, float, double, bool, string
+  
+  - name: "L2_Voltage"
+    node_id: "ns=2;s=L2_Voltage"
+    access: "read"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 1450
+      datatype: "float"
+
+  - name: "Total_Energy"
+    node_id: "ns=2;s=Total_Energy"
+    access: "read"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 1442
+      datatype: "uint32"
+
+  - name: "Run_Command"
+    node_id: "ns=2;s=Run_Command"
+    access: "write"
+    modbus:
+      slave: "inverter1"
+      function: "holding"
+      address: 6452
+      datatype: "float"
+
+  - name: "Sensor_ID"
+    node_id: "ns=2;s=Sensor_ID"
+    access: "read"
+    modbus:
+      slave: "Texol_RTU"
+      function: "input"
+      address: 4
+      datatype: "string"
+      length: 3
+
+  - name: "RPM"
+    node_id: "ns=2;s=RPM"
+    access: "read"
+    modbus:
+      slave: "Texol_RTU"
+      function: "input"
+      address: 7
+      datatype: "uint16"
+
+  - name: "Set_RPM_Start"
+    node_id: "ns=2;s=Set_RPM_Start"
+    access: "write"
+    modbus:
+      slave: "Texol_RTU"
+      function: "holding"
+      address: 15
+      datatype: "uint32"
+
+  - name: "RPM_Start_Value"
+    node_id: "ns=2;s=RPM_Start_Value"
+    access: "read"
+    modbus:
+      slave: "Texol_RTU"
+      function: "input"
+      address: 244
+      datatype: "uint32"
