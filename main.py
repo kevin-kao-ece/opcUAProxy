@@ -10,6 +10,7 @@ from datetime import datetime
 import neo_opcua
 import web
 from logHelper import logger
+from modbus_base import validate_config
 from modbus_tcp import ModbusTCPHandler
 from modbus_rtu import ModbusRTUHandler
 
@@ -20,7 +21,16 @@ async def main():
     tag_cache = {}
     cache_lock = Lock()
     
-    # 1. Load Configuration
+    # 1. Load & Validate Configuration
+    config_path = "config.yaml"
+
+    # Run validation before anything else
+    is_valid, error = validate_config(config_path)
+    if not is_valid:
+        logger.critical(f"Configuration Invalid: {error}")
+        print(f"CRITICAL ERROR: {error}")
+        sys.exit(1)
+        
     try:
         with open("config.yaml", "r") as f:
             cfg = yaml.safe_load(f)

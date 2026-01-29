@@ -1,5 +1,43 @@
-import struct
+import struct, yaml
 from logHelper import logger
+
+def validate_config(file_path):
+    """
+    Returns (True, "") if valid, (False, "Error Message") if invalid.
+    """
+    try:
+        with open(file_path, "r") as f:
+            cfg = yaml.safe_load(f)
+        
+        # 1. Check top-level structure
+        if not all(k in cfg for k in ["modbus", "opcua", "nodes"]):
+            return False, "Missing top-level keys: modbus, opcua, or nodes"
+
+        # 2. Validate Slaves
+        slaves = cfg["modbus"].get("slaves", {})
+        if not slaves:
+            return False, "No Modbus slaves defined"
+        
+        for name, s in slaves.items():
+            if "ip" not in s and "port" not in s:
+                return False, f"Slave '{name}' needs an 'ip' (TCP) or 'port' (RTU)"
+
+        # 3. Validate Nodes
+        for node in cfg["nodes"]:
+            required_node_keys = ["node_id", "name", "modbus"]
+            if not all(k in node for k in required_node_keys):
+                return False, f"Node {node.get('name', 'unknown')} missing required keys"
+            
+            m = node["modbus"]
+            if m["slave"] not in slaves:
+                return False, f"Node '{node['name']}' references undefined slave '{m['slave']}'"
+            
+            if m["datatype"] not in ["int16", "uint16", "int32", "uint32", "float", "double", "bool", "string"]:
+                return False, f"Invalid datatype '{m['datatype']}' in node '{node['name']}'"
+
+        return True, ""
+    except Exception as e:
+        return False, f"YAML Syntax Error: {str(e)}"
 
 TYPE_MAP = {
     "int16": (1, "h"), "uint16": (1, "H"),

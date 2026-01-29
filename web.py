@@ -1,7 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse
-import os, sys, shutil, uvicorn, threading, asyncio
+from fastapi.responses import HTMLResponse, FileResponse
+import os, sys, shutil, uvicorn, threading, asyncio, zipfile, io
 from logHelper import logger
+from modbus_base import validate_config
 import modbus_tcp
 
 class WSManager:
@@ -32,6 +33,17 @@ async def get_index():
     with open(path, "r") as f:
         return f.read()
 
+@app.get("/download_config")
+async def download_config():
+    config_path = "config.yaml"
+    if os.path.exists(config_path):
+        return FileResponse(
+            path=config_path, 
+            filename="config.yaml", 
+            media_type='application/x-yaml'
+        )
+    raise HTTPException(status_code=404, detail="Config file not found")
+
 @app.post("/upload_config")
 async def upload_config(file: UploadFile = File(...)):
     temp_path = "config_temp.yaml"
@@ -43,7 +55,7 @@ async def upload_config(file: UploadFile = File(...)):
         f.write(content)
     
     # 2. Validate the temporary file
-    is_valid, error_msg = modbus_tcp.validate_config_file(temp_path)
+    is_valid, error_msg = validate_config(temp_path)
     if not is_valid:
         os.remove(temp_path)
         raise HTTPException(status_code=400, detail=f"Invalid Config: {error_msg}")
@@ -67,6 +79,22 @@ async def restart_gateway():
     threading.Thread(target=delayed_restart).start()
     logger.info("restarting")
     return {"status": "restarting"}
+
+@app.get("/download_logs_all")
+async def download_logs_all():
+    log_dir = "logs"
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(log_dir):
+            for file in files:
+                zf.write(os.path.join(root, file), file)
+    
+    memory_file.seek(0)
+    return HTMLResponse(
+        content=memory_file.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=all_logs.zip"}
+    )
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):

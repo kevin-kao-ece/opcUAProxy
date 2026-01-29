@@ -1,0 +1,10 @@
+## port、baudrate、parity、databits、slave_id 設定問題
+Modbus Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 2 bytes (0 received)
+Modbus Error: [Input/Output] No Response received from the remote unit/Unable to decode response
+
+## stopbit 設定問題
+RTU Critical Hardware Error on /dev/ttyS1: Not a valid stop bit size: 0
+
+## Start Address 設定問題
+RTU Read Error on Texol_RTU: Exception Response(132, 4, IllegalAddress)
+
